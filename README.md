@@ -9,7 +9,7 @@
 
 A high-performance, distributed real-time collaborative workspace engine built with **WebSockets**, **Conflict-Free Replicated Data Types (LWW-CRDT)**, and **Redis Pub/Sub clustering**.
 
-CollabSync enables multiple users to draw on an infinite canvas, type in synchronized notes, and track live remote cursors in real time with sub-25ms latency and deterministic conflict resolution.
+CollabSync enables multiple users to draw on an infinite canvas, type in synchronized notes, and track live remote cursors in real time with low-latency full-duplex communication and deterministic conflict resolution.
 
 ---
 
@@ -68,12 +68,12 @@ CollabSync enables multiple users to draw on an infinite canvas, type in synchro
 * CollabSync connects server nodes to a centralized **Redis Pub/Sub message broker**. When User A connected to **Server Node 1** draws an element, Server 1 broadcasts the delta to Redis. **Server Node 2** receives the event and streams it instantly to User B, achieving transparent cross-server collaboration.
 
 ### 3. "Airplane Mode" Offline Resilience & Reconnection Queue
-* Built with an **offline-first queue**. If a user loses connection (e.g., enters an elevator or enables the built-in *Airplane Mode* toggle), the client continues running with full editing capability.
-* Changes are locally buffered and timestamped. Once connection is restored, the client automatically drains the queue to the server, and the CRDT reconciles remote and offline edits without losing a single stroke.
+* Built with an **offline-first queue**. If a user loses connection (e.g., enters an elevator or enables the built-in *Airplane Mode* toggle), the client continues running with local editing capability.
+* Changes are locally buffered and timestamped in `localStorage`. Once connection is restored, the client automatically drains the queue to the server, and the CRDT reconciles remote and offline edits according to logical timestamp ordering.
 
-### 4. 60 FPS HTML5 Canvas & Sub-Pixel Cursor Interpolation
-* The canvas renders using a hardware-accelerated `requestAnimationFrame` loop with dirty-region clearing and 50ms throttled presence streams.
-* Remote collaborators' mouse movements are rendered with smooth sub-pixel tracking, distinct identity tags, and status avatars.
+### 4. 60 FPS HTML5 Canvas & Real-Time Cursor Tracking
+* The canvas renders using a hardware-accelerated `requestAnimationFrame` loop with full-frame redrawing and 50ms throttled presence streams.
+* Remote collaborators' mouse movements are rendered in real time with distinct identity tags and status avatars.
 
 ### 5. Debounced Write-Behind Snapshotting
 * Disk I/O on every stroke destroys server throughput. CollabSync implements an asynchronous write-behind worker that aggregates state in memory and flushes atomic snapshots to disk on a debounced timer (2000ms idle interval).
@@ -86,12 +86,12 @@ You can demonstrate this directly to an interviewer in 30 seconds:
 
 1. Open `http://localhost:3000?room=demo` in **Window A**.
 2. Open the same link in an **Incognito Window B** side by side.
-3. Draw a circle in Window A $\rightarrow$ It appears in Window B under 20ms.
+3. Draw a circle in Window A $\rightarrow$ It appears live in Window B in real time.
 4. In Window B, click the **"Airplane Mode"** button on the toolbar (simulates dropped Wi-Fi).
 5. In Window B, draw 3 shapes offline. Notice the HUD reads: `OFFLINE (3 offline edits)`.
 6. Meanwhile, in Window A, draw a rectangle online.
 7. Now click **"Airplane Mode"** again in Window B to reconnect.
-8. **Watch the magic:** Window B immediately syncs its 3 offline shapes to Window A, and Window A's rectangle merges into Window B without data loss.
+8. **Watch the magic:** Window B immediately syncs its 3 offline shapes to Window A, and Window A's rectangle merges into Window B cleanly without overwriting.
 
 ---
 
