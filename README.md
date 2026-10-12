@@ -9,7 +9,7 @@
 
 A high-performance, distributed real-time collaborative workspace engine built with **WebSockets**, **Conflict-Free Replicated Data Types (LWW-CRDT)**, and **Redis Pub/Sub clustering**.
 
-CollabSync enables multiple users to draw on an infinite canvas, type in synchronized notes, and track live remote cursors in real time with low-latency full-duplex communication and deterministic conflict resolution.
+CollabSync enables multiple users to draw on an interactive canvas, type in synchronized notes, and track live remote cursors in real time with low-latency full-duplex communication and deterministic conflict resolution.
 
 ---
 
@@ -46,7 +46,7 @@ CollabSync enables multiple users to draw on an infinite canvas, type in synchro
                          +--------------------------+
                                       |
                          +------------v-------------+
-                         |  Debounced Write-Behind  |
+                         |  Periodic Write-Behind  |
                          |    Snapshot Persistence  |
                          +--------------------------+
 ```
@@ -75,8 +75,8 @@ CollabSync enables multiple users to draw on an infinite canvas, type in synchro
 * The canvas renders using a hardware-accelerated `requestAnimationFrame` loop with full-frame redrawing and 50ms throttled presence streams.
 * Remote collaborators' mouse movements are rendered in real time with distinct identity tags and status avatars.
 
-### 5. Debounced Write-Behind Snapshotting
-* Disk I/O on every stroke destroys server throughput. CollabSync implements an asynchronous write-behind worker that aggregates state in memory and flushes atomic snapshots to disk on a debounced timer (2000ms idle interval).
+### 5. Periodic Write-Behind Snapshotting
+* Disk I/O on every stroke destroys server throughput. CollabSync implements an asynchronous write-behind worker that aggregates state in memory and flushes atomic snapshots to disk on a periodic timer (every 2 seconds) for dirty rooms.
 
 ---
 
@@ -133,7 +133,7 @@ make test
 2. **Why WebSockets over WebRTC DataChannels?**  
    WebSockets provide deterministic delivery guarantees via TCP, predictable NAT traversal without STUN/TURN server requirements, and simple integration with Redis Pub/Sub backend clusters.
 
-3. **Why Debounced Write-Behind Snapshotting?**  
+3. **Why Periodic Write-Behind Snapshotting?**  
    Synchronous database writes on every socket packet create database connection pool exhaustion under high concurrency. Debounced write-behind decouples real-time in-memory throughput from disk I/O latency.
 
 ---
